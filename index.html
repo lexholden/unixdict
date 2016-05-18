@@ -1,0 +1,136 @@
+<html ng-app="UnixDict">
+  <head>
+      <script type="text/javascript" src="./node_modules/jquery/dist/jquery.min.js"></script>
+      <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.min.js"></script>
+      <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-animate.min.js"></script>
+      <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-aria.min.js"></script>
+      <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-messages.min.js"></script>
+      <script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.min.js"></script>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+      <link rel="stylesheet" type="text/css" href="./node_modules/angular-material/angular-material.css" />
+      <link rel="stylesheet" type="text/css" href="./styles.css" />
+      <script type="text/javascript">
+
+        var table;
+        var google = { visualization: {Query:{setResponse: function(d) {table = d; return d;}}} }
+
+        angular.module('UnixDict', ['ngMaterial'])
+          .config(function($mdIconProvider) {
+            $mdIconProvider
+               .iconSet('social', 'img/icons/sets/social-icons.svg', 24)
+               .defaultIconSet('img/icons/sets/core-icons.svg', 24);
+          })
+          .controller('UnixDictCtrl', function($rootScope, $scope, $http) {
+
+            $scope.data = { commands: [], lookup: {}, families: {} };
+            $scope.search = '';
+            // $scope.search = { root: true }
+
+            function checkVals(c) {
+              var s = [c.command];
+              if (c.description) { s.push(c.description); }
+              return ( s.join('\n').toLowerCase().indexOf($scope.search.toLowerCase()) !== -1);
+            }
+
+            $scope.filterQuery = function(c) {
+              // console.log('filtering "' + $scope.search + '" against ' + c.command);
+              return ($scope.search.length ? true : c.root) && ($scope.search.length ? checkVals(c) : true ) 
+            }
+
+            $scope.rowClick = function(r) {
+              if (r.root) { $scope.search = r.command; }
+              // console.log(r);
+            }
+
+            $scope.clearSearch = function() {
+              $scope.search = '';
+            }
+
+            $scope.onSearchChange = function() {
+              // console.log('changed!')
+              // console.log($scope.search);
+              // console.log($scope.data.commands);
+              // $scope.search.root = $scope.search.length ? false : true;
+            }
+
+            $http.jsonp('https://spreadsheets.google.com/tq?&tq=&key=1B5XHk6KUg4fElTvJtYjhigxn9oB0d2uhA2ULw_ocCUo&gid=2')
+              .success(function(d) { 
+                // console.log(d);
+              }).error(function (e) {
+                // console.log(e);
+                $scope.table = table.table;
+                console.log(table);
+                console.log('JSON BLOB SIZE: ' + JSON.stringify(table).length);
+                $scope.table.rows.forEach(function(r, ri) {
+                  var row = {};
+                  if (ri !== 0) {
+
+                    r.c.forEach(function(c, ci) {
+                      if (c !== null && c.v !== null && c.v.length !== 0) {
+                        // console.log($scope.table.rows[0].c[ci].v.toLowerCase() + ' is ' + c.v);
+                        row[$scope.table.rows[0].c[ci].v.toLowerCase()] = c;
+                      }
+                    })
+
+                    if (row.command) {
+                      row.id = ri;
+                      row.command = row.command.v;
+                      row.params = row.command.split(' ');
+                      if (row.params.length == 1) { row.root = true; } else { row.root = false; }
+                      row.family = row.params[0];
+                      // TODO Worth working out individual flags?
+
+                      if (row.description) { row.description = row.description.v.toLowerCase(); } else {row.description = '*'}
+                      if (row.category) {  } // TODO parse the category
+
+
+
+                      console.log(row);
+                      $scope.data.lookup[row.command] = row;
+                      if ($scope.data.families[row.family] !== undefined) { 
+                        $scope.data.families[row.family].push(row); 
+                      } else { 
+                        $scope.data.families[row.family] = [row];
+                      }
+                      $scope.data.commands.push(row);
+
+                    }
+                  }
+                });
+              });
+            });
+
+        </script>
+        <title>UnixDict</title>
+  </head>
+  <body ng-controller="UnixDictCtrl">
+      <div class="outer">
+          <div class="{{search.length || active ? 'top' : 'middle'}}">
+              <div class="inner">
+                  <div style="background: #EEE; padding: 20px 20px 0px 20px;  margin: 0 auto; position: relative;">
+                      <!--         <div style="position: absolute; left: -30px; height: 50px; width: 100px;background: crimson;">
+            
+          </div> -->
+                      <md-input-container class="md-block" flex-gt-sm style="margin: 0">
+                          <i class="material-icons search-icon" ng-click="clearSearch()">{{search.length ? 'close' : 'search'}}</i>
+                          <label>Search for a Unix Command</label>
+                          <input ng-focus="active = true" ng-model="search" ng-change="onSearchChange()">
+                      </md-input-container>
+                  </div>
+                  <div style="float: right;" ng-show="search.length.cheese">
+                      <a href="">Help?</a>
+                  </div>
+              </div>
+          </div>
+          <div class="results" ng-show="search.length || active">
+              <div class="row" ng-repeat="row in filteredItems = (data.commands | filter:filterQuery | orderBy:'command' | limitTo: 150) ">
+                  <span class="command" ng-click="rowClick(row)" style="cursor: {{row.root ? 'pointer' : 'default'}}">{{row.command}}</span>
+                  <span class="underline"></span>
+                  <span class="description">{{row.description}}<i class="material-icons root-icon" title="This is a raw command" ng-if="row.root">star</i></span>
+              </div>
+              <div ng-hide="filteredItems.length" style="margin: 30px; text-align: center;">There are no results.</div>
+          </div>
+      </div>
+  </body>
+
+</html>

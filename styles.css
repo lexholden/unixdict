@@ -1,0 +1,81 @@
+.outer {
+    display: table;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+}
+
+* {
+    transition: all 0.4s ease-in-out;
+}
+
+.middle {
+    margin-top: calc(30%);
+    // display: table-cell;
+    // vertical-align: middle;
+}
+
+.top {
+    margin-top: 20px;
+    // display: table-cell;
+    // vertical-align: top;
+}
+
+.inner {
+    margin-left: auto;
+    margin-right: auto; 
+    width: 100%; 
+    max-width: 500px;
+}
+
+.results {
+    padding: 40px 20px 20px; 
+    margin: auto; 
+    max-width: 600px;
+}
+
+.row {
+    clear: both; 
+    min-height: 22px;
+    padding: 4px 15px;
+    z-index: 1000;
+}
+
+.row:nth-of-type(odd) {
+    background: #F6F6F6;
+}
+
+.command {
+    float: left;
+    // cursor: pointer;
+    outline: none;
+}
+
+.command:after {
+    // color: #CCC;
+    // content: '  ....................................................................................................................................................................................................................................................................................... '
+}
+
+.description {
+    // font-size: 0.8em;
+    padding-left: 10px;
+    float: right;
+    font-style: italic;
+    color: #AAA;
+}
+
+.search-icon {
+    color: #666 ; 
+    display: inline-block; 
+    right: 0; 
+    position: absolute;
+}
+
+
+.root-icon {
+    font-size: 1em;
+    color: #EEE;
+    float: right;
+    margin: 3px -40px 3px 5px;
+    cursor: default;
+}
