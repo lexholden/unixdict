@@ -80,7 +80,8 @@
                       row.family = row.params[0];
                       // TODO Worth working out individual flags?
 
-                      if (row.description) { row.description = row.description.v.toLowerCase(); } else {row.description = '*'}
+                      if (row.description) { row.description = row.description.v.toLowerCase(); } 
+                      else {row.description = '*'; console.log('WARNING: "' + row.command + '" has no description.')}
                       if (row.category) {  } // TODO parse the category
 
 
